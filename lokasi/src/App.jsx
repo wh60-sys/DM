@@ -2,29 +2,7 @@ import React, { useState, useRef } from 'react';
 import './App.css'
 
 function App() {
-  const [warehouses, setWarehouses] = useState([
-    {
-      id: 1,
-      name: 'Gudang A',
-      location: 'Surabaya',
-      items: [
-        {
-          id: 1,
-          x: 300,
-          y: 200,
-          name: 'Produk A',
-          color: '#4caf50',
-          url: 'https://example.com/product-a',
-          fifo: '2025-01-15',
-          expired: '2025-12-31',
-          quantity: 100,
-          status: 'stop',
-          category: 'Elektronik'
-        }
-      ]
-    }
-  ]);
-
+  const [warehouses, setWarehouses] = useState([]);
   const [activeWarehouse, setActiveWarehouse] = useState(1);
   const [showAddWarehouse, setShowAddWarehouse] = useState(false);
   const [showAddItem, setShowAddItem] = useState(false);
@@ -194,10 +172,10 @@ function App() {
   };
 
   const deleteWarehouse = (warehouseId) => {
-    if (warehouses.length === 1) {
+    /*if (warehouses.length === 1) {
       alert('Minimal harus ada 1 gudang!');
       return;
-    }
+    }*/
     
     if (window.confirm('Yakin ingin menghapus gudang ini? Semua barang di dalamnya akan terhapus.')) {
       setWarehouses(warehouses.filter(w => w.id !== warehouseId));
@@ -329,14 +307,87 @@ function App() {
     expired: currentWarehouse?.items.filter(i => isExpired(i.expired)).length || 0
   };
 
+  // 💥 FUNGSI CETAK LOKASI GUDANG BARU 💥
+  const printWarehouseLayout = (warehouse) => {
+    if (!warehouse) return;
+
+    // Sortir item berdasarkan Nama (untuk kerapian laporan)
+    const sortedItems = [...warehouse.items].sort((a, b) => 
+        a.name.localeCompare(b.name)
+    );
+
+    // Buat konten HTML untuk cetak
+    let printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Laporan Lokasi Gudang: ${warehouse.name}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                h1 { color: #2d3748; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+                h2 { color: #4a5568; margin-top: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+                th { background-color: #f7fafc; font-weight: 600; }
+                /* Styles untuk Laporan Cetak */
+                .status-stop { background-color: #fcebeb; color: #c53030; font-weight: bold; padding: 2px 5px; border-radius: 4px; display: inline-block;}
+                .status-out { background-color: #d1fae5; color: #276749; font-weight: bold; padding: 2px 5px; border-radius: 4px; display: inline-block;}
+                .status-badge { text-transform: uppercase; }
+            </style>
+        </head>
+        <body>
+            <h1>Laporan Lokasi Gudang</h1>
+            <h2>${warehouse.name} (${warehouse.location}) - Total: ${warehouse.items.length} Barang</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Barang</th>
+                        <th>Code</th>
+                        <th>Qty</th>
+                        <th>Lokasi (X, Y)</th>
+                        <th>Status</th>
+                        <th>FIFO</th>
+                        <th>Expired</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    sortedItems.forEach((item, index) => {
+        let statusClass = item.status ? `status-${item.status}` : '';
+        
+        printContent += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.category || '-'}</td>
+                <td>${item.quantity}</td>
+                <td>(${Math.round(item.x)}, ${Math.round(item.y)})</td>
+                <td><span class="${statusClass} status-badge">${item.status ? item.status.toUpperCase() : '-'}</span></td>
+                <td>${item.fifo || '-'}</td>
+                <td>${item.expired || '-'}</td>
+            </tr>
+        `;
+    });
+
+    printContent += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+
+    // Buka jendela baru dan cetak
+    const printWindow = window.open('', '_blank', 'height=600,width=800');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+  
   return (
     <div className="wms-container">
-      <header className="wms-header">
-        <div className="wms-logo">
-          <h1>PPIC</h1>
-          <p>informasi suport for bp dony febrian</p>
-        </div>
-      </header>
 
       <div className="warehouse-tabs">
         <div className="tabs-list">
@@ -420,6 +471,7 @@ function App() {
             <option value="out">OUT</option>
           </select>
         </div>
+        {/* 💥 PERBAIKAN: PENEMPATAN TOMBOL CETAK 💥 */}
         <div className="toolbar-right">
           <div className="zoom-controls">
             <button onClick={() => setZoom(Math.min(zoom + 0.2, 3))} title="Zoom In">🔍+</button>
@@ -427,6 +479,11 @@ function App() {
             <button onClick={() => setZoom(Math.max(zoom - 0.2, 0.3))} title="Zoom Out">🔍-</button>
             <button onClick={resetView} title="Reset View">🎯</button>
           </div>
+          
+          <button className="add-item-btn print-btn" onClick={() => printWarehouseLayout(currentWarehouse)} title="Cetak Lokasi Gudang">
+            🖨️ Cetak Lokasi
+          </button>
+          
           <button className="add-item-btn" onClick={() => setShowAddItem(true)}>
             ➕ Tambah Barang
           </button>
@@ -463,14 +520,21 @@ function App() {
               }}
             >
               <div className="item-label" style={{ backgroundColor: item.color }}>
-                <div className="item-name">{item.name}</div>
-                <div className="item-qty">Qty: {item.quantity}</div>
+                <div className="item-name"> jenis : {item.name} = {item.quantity}</div>
+                {item.status && 
+                  (item.status === 'stop' || item.status === 'out') && 
+                  (
+                    <span className={`status-badge status-${item.status}`}>
+                      {item.status.toUpperCase()}
+                    </span>
+                  )
+                } {item.fifo}
               </div>
 
               <div className="item-controls item-controls-hover">
                 <button onClick={(e) => { e.stopPropagation(); toggleInfo(item.id); }} title="Info">ℹ️</button>
                 <button onClick={(e) => { e.stopPropagation(); startEdit(item.id); }} title="Edit">✏️</button>
-                <button onClick={(e) => { e.stopPropagation(); duplicateItem(item.id); }} title="Duplikat">📋</button>
+                <button onClick={(e) => { e.stopPropagation(); duplicateItem(item.id); }} title="copy">📋</button>
                 <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} title="Hapus">🗑️</button>
               </div>
 
@@ -478,7 +542,7 @@ function App() {
                 <div className="item-info-box" onClick={(e) => e.stopPropagation()}>
                   <button className="info-close" onClick={closeInfo}>✕</button>
                   <div className="info-row"><strong>Nama:</strong> {item.name}</div>
-                  <div className="info-row"><strong>Kategori:</strong> {item.category}</div>
+                  <div className="info-row"><strong>Code:</strong> {item.category}</div>
                   <div className="info-row"><strong>FIFO:</strong> {item.fifo}</div>
                   <div className="info-row"><strong>Expired:</strong> {item.expired || '-'}</div>
                   <div className="info-row"><strong>Jumlah:</strong> {item.quantity}</div>
@@ -529,7 +593,7 @@ function App() {
             <h2>Tambah Barang Baru</h2>
             <div className="modal-grid">
               <label>Nama Barang: <span className="required">*</span><input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} /></label>
-              <label>Kategori:<input type="text" value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} /></label>
+              <label>Code:<input type="text" value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} /></label>
               <label>Warna Label:<div style={{display: 'flex', gap: '10px'}}><input type="color" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} /><input type="text" value={newItem.color} onChange={(e) => setNewItem({...newItem, color: e.target.value})} style={{width: '100px'}} /></div></label>
               <label>URL Link:<input type="text" value={newItem.url} onChange={(e) => setNewItem({...newItem, url: e.target.value})} /></label>
               <label>Tanggal Masuk (FIFO):<input type="date" value={newItem.fifo} onChange={(e) => setNewItem({...newItem, fifo: e.target.value})} /></label>
