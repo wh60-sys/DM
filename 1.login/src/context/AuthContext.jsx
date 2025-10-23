@@ -10,19 +10,21 @@ const SPECIAL_ADMIN_EMAIL = "warehouseppic60@gmail.com";
 // DEFINISI NAMA ROLE (Customizable)
 // ====================================================================
 export const ROLE_NAME_MAP = {
-  1: "PPIC Dashboard User",
-  2: "Order Input Staff",
-  3: "Laporan Produksi Checker",
-  4: "Master Bahan Baku Admin",
-  5: "Master Kemasan Admin",
-  6: "Gudang RM/Packing Staff",
-  7: "QA/QC Staff",
-  8: "Maintenance Team",
-  9: "Finance Admin",
-  10: "Super Admin Global", // Nama Role 10 bisa diubah
-  11: "Logistik Inbound Staff",
-  12: "Logistik Outbound Staff",
-  13: "Rekap Harian User",
+  1: "",
+  2: "",
+  3: "",
+  4: "",
+  5: "",
+  6: "",
+  7: "",
+  8: "",
+  9: "",
+  10: "",
+  11: "",
+  12: "",
+  13: "",
+  14: "",
+  15: "",
   // Tambahkan Role custom lainnya di sini jika diperlukan
 };
 // ====================================================================

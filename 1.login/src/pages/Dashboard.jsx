@@ -1,28 +1,55 @@
-// src/pages/Dashboard.jsx (FIXED - Logout dan Admin Override by Email)
+// src/pages/Dashboard.jsx (FULL - Modul Data Stok Dipindah Ke Kanan & Muncul Saat Diklik)
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { useAuth, ROLE_NAME_MAP } from "../context/AuthContext";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 // ====================================================================
-// DEFINISI 13 HALAMAN CUSTOM
+// DEFINISI HALAMAN CUSTOM (Dimulai dari Page 0)
 // ====================================================================
 const PAGE_MAP = {
-  1: "Dashboard PPIC",
-  2: "Input Data Order",
-  3: "Laporan Produksi",
-  4: "Master Bahan Baku",
-  5: "Master Kemasan",
-  6: "Gudang RM/Packing",
-  7: "QA/QC",
-  8: "Maintenance",
-  9: "Finance",
-  10: "Super Admin Settings",
-  11: "Logistik Inbound",
-  12: "Logistik Outbound",
-  13: "Rekap Harian",
+  0: "",
+  1: "",
+  2: "",
+  3: "",
+  4: "",
+  5: "",
+  6: "",
+  7: "",
+  8: "",
+  9: "",
+  10: "",
+  11: "",
+  12: "",
+  13: "",
+  14: "",
+  15: "",
+  16: "",
+  17: "",
+  18: "",
+  19: "",
+  20: "",
+  21: "",
+  22: "",
+  23: "",
+  24: "",
+  25: "",
+  26: "",
+  27: "",
+  28: "",
+  29: "",
+  30: "",
+  31: "",
+  32: "",
+  33: "",
+  34: "",
+  35: "",
+  36: "",
+  37: "",
+  38: "",
+  39: "",
+  40: "",
 };
 
-// Array of page numbers: [1, 2, ..., 13]
 const pages = Object.keys(PAGE_MAP).map(Number);
 
 // ====================================================================
@@ -32,48 +59,37 @@ export default function Dashboard() {
   const { user, userRole, signOut, SPECIAL_ADMIN_EMAIL } = useAuth();
   const navigate = useNavigate();
 
-  // FIX LOGOUT BOTTOM: Tambahkan setTimeout
   const handleLogout = async () => {
     await signOut();
-
-    // Memberi waktu 10ms untuk state dan unmount sebelum navigasi
-    setTimeout(() => {
-      navigate("/login");
-    }, 10);
+    setTimeout(() => navigate("/login"), 10);
   };
 
-  // Cek apakah user yang login adalah Admin KHUSUS (Email Override)
   const isSpecialAdmin = user?.email === SPECIAL_ADMIN_EMAIL;
 
-  // LOGIKA AKSES
-  const accessiblePages = isSpecialAdmin
-    ? pages // Jika email khusus, akses semua 13 halaman
-    : pages.filter((num) => num === userRole); // Role lain hanya dapat mengakses halaman yang sesuai
-
-  // MENDAPATKAN NAMA ROLE CUSTOM
-  const userRoleName = ROLE_NAME_MAP[userRole] || `Role ${userRole}`;
+  const accessiblePages = pages.filter((num) => {
+    if (num === 0) return isSpecialAdmin;
+    return isSpecialAdmin || num === userRole;
+  });
 
   return (
     <div>
       <nav>
         <div>
           <div>
-            <div>
-              {accessiblePages.map((num) => (
-                <Link key={num} to={`/page/${num}`}>
-                  {PAGE_MAP[num]} ({num})
-                </Link>
-              ))}
-            </div>
+            {accessiblePages.map((num) => (
+              <Link key={num} to={`/page/${num}`}>
+                {PAGE_MAP[num]} {num}.
+              </Link>
+            ))}
           </div>
-          <div>
-            <span>
-              Hello, <strong>{user?.email}</strong> (Role: {userRoleName} - No.{" "}
-              {userRole || "N/A"})
-              {isSpecialAdmin && <span> [SUPER ADMIN OVERRIDE]</span>}
-            </span>
-            <button onClick={handleLogout}>Logout</button>
-          </div>
+        </div>
+        <div>
+          <span>
+            Hallo, <strong>{user?.email}</strong>
+            {isSpecialAdmin && <span> kamu login sebagai </span>} 0
+            {userRole || "N/A"}1
+          </span>
+          <button onClick={handleLogout}>Logout</button>
         </div>
       </nav>
 
@@ -113,127 +129,50 @@ export default function Dashboard() {
 }
 
 function PageContent({ number, userRole, pageName, isSpecialAdmin }) {
-  // PROTEKSI AKSES: Izinkan jika ini adalah Super Admin KHUSUS, atau izinkan jika Role = Halaman.
-  // Jika user adalah admin khusus, dia akan bypass semua cek role.
+  if (number === 0) {
+    if (!isSpecialAdmin) {
+      return (
+        <div>
+          <h1>Akses Ditolak! 🛑 SERVER 0</h1>
+          <p>Halaman ini hanya untuk Super Admin.</p>
+        </div>
+      );
+    }
+    return <ServerDashboardContent pageName={pageName} />;
+  }
+
   if (!isSpecialAdmin && userRole !== number) {
-    const requiredPageName = PAGE_MAP[number];
     return (
       <div>
         <h1>Akses Ditolak! 🛑</h1>
-        <p>
-          Anda adalah **Role {userRole}** dan hanya memiliki akses ke **
-          {PAGE_MAP[userRole]} ({userRole})**.
-        </p>
-        <p>
-          Halaman ini (**{pageName} ({number})**) hanya dapat diakses oleh
-          **Role {number}**.
-        </p>
+        <p>Anda tidak memiliki akses ke halaman ini.</p>
       </div>
     );
   }
 
-  if (number === 3) {
-    // Role 3 mendapatkan konten khusus (Laporan Produksi)
-    return (
-      <LaporanProduksiPageForPage3
-        pageName={pageName}
-        isSpecialAdmin={isSpecialAdmin}
-      />
-    );
-  }
-
-  // Konten default untuk Role selain 3
   return (
     <div>
-      <h1>
-        {pageName} ({number}){" "}
-        {isSpecialAdmin ? "(Akses Super Admin Override)" : ""}
-      </h1>
-      <p>
-        Ini adalah konten khusus untuk **Role {number}** ({pageName}). Konten
-        ini hanya dapat dilihat oleh Anda.
-      </p>
+      <h1>{pageName}</h1>
+      <p>Halaman akses terbatas untuk Role {number}.</p>
     </div>
   );
 }
 
 // ====================================================================
-// KOMPONEN KHUSUS UNTUK PAGE 3: LaporanProduksiPage
+// SERVER CONTENT
 // ====================================================================
+const INITIAL_STOCK = {};
 
-// DUMMY_STOCK sekarang hanya digunakan untuk inisialisasi state
-const INITIAL_STOCK = {
-  PK001: 300,
-  RM010: 50,
-  "SOLVENT-A": 50,
-  "BARU-1": 1,
-};
-
-function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
-  const initialRequests = [
-    {
-      idPermintaan: "REQ-20251023-PCK-12345678-0",
-      nomorItem: "PK001",
-      jenisBarang: "Kemasan Plastik A",
-      qtyDiminta: 500,
-      qtyDeliveredTotal: 0,
-      isUrgent: true,
-      unitSatuan: "PCS",
-      departemen: "PACKING",
-      tglRequest: "2025-10-23",
-      status: "REQUESTED",
-      type: "BARANG",
-    },
-    {
-      idPermintaan: "REQ-20251023-FNS-98765432-1",
-      nomorItem: "RM010",
-      jenisBarang: "Bahan Baku X",
-      qtyDiminta: 20,
-      qtyDeliveredTotal: 0,
-      isUrgent: false,
-      unitSatuan: "KG",
-      departemen: "FINISHING",
-      tglRequest: "2025-10-23",
-      status: "ON_HOLD",
-      type: "BARANG",
-    },
-    {
-      idPermintaan: "REQ-20251022-QC-11223344-0",
-      nomorItem: "SOLVENT-A",
-      jenisBarang: "SOLVENT-A",
-      qtyDiminta: 5,
-      qtyDeliveredTotal: 0,
-      isUrgent: true,
-      unitSatuan: "LITER",
-      departemen: "QC",
-      tglRequest: "2025-10-22",
-      status: "REQUESTED",
-      type: "ADDITIVE",
-    },
-  ];
-
-  const initialDeliveries = [];
-
-  const [requests, setRequests] = useState(initialRequests);
-  const [deliveries, setDeliveries] = useState(initialDeliveries);
-  // ✅ STATE BARU UNTUK STOK
+function ServerDashboardContent({ pageName }) {
+  const [requests, setRequests] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
   const [stockData, setStockData] = useState(INITIAL_STOCK);
-  const [selectedView, setSelectedView] = useState("dashboard");
-  const [selectedDetailId, setSelectedDetailId] = useState(null);
+  const [selectedView, setSelectedView] = useState("status");
   const [filterTgl, setFilterTgl] = useState("");
   const [filterJenis, setFilterJenis] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
   const [deliveryForm, setDeliveryForm] = useState(null);
 
-  // =======================================================
-  // ✅ FUNGSI DATA UTILITY: CETAK/PRINT, DOWNLOAD, RESET, UPLOAD
-  // =======================================================
-
-  // Fungsi Cetak Global
-  const handlePrintLaporan = () => {
-    window.print();
-  };
-
-  // Fungsi Download JSON
   const downloadJson = (data, filename) => {
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
       JSON.stringify(data, null, 2)
@@ -244,637 +183,294 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
     link.click();
   };
 
-  // Fungsi Reset Data
-  const handleResetData = (type) => {
-    if (
-      !window.confirm(
-        `Apakah Anda yakin ingin MENGHAPUS PERMANEN semua data ${type.toUpperCase()}? Aksi ini tidak dapat dibatalkan.`
-      )
-    ) {
-      return;
-    }
-
-    if (type === "requests") {
-      setRequests([]);
-      alert("Data Permintaan berhasil direset!");
-    } else if (type === "deliveries") {
-      setDeliveries([]);
-      alert("Data Serah Terima berhasil direset!");
-    } else if (type === "stock") {
-      setStockData({}); // Reset stok ke objek kosong
-      alert("Data Stock Gudang berhasil direset!");
-    }
+  const handleResetData = () => {
+    if (!window.confirm("Yakin reset semua data stok?")) return;
+    setStockData({});
+    alert("Stok direset");
   };
 
-  // Fungsi Upload JSON
-  const handleFileUpload = (event, type) => {
+  const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const content = e.target.result;
-        const parsedData = JSON.parse(content);
-
-        if (type === "requests") {
-          if (!Array.isArray(parsedData)) {
-            alert("Data Requests harus Array.");
-            return;
-          }
-          setRequests((prev) => [...prev, ...parsedData]);
-          alert(`${parsedData.length} data Permintaan berhasil diimpor!`);
-        } else if (type === "deliveries") {
-          if (!Array.isArray(parsedData)) {
-            alert("Data Deliveries harus Array.");
-            return;
-          }
-          setDeliveries((prev) => [...prev, ...parsedData]);
-          alert(`${parsedData.length} data Serah Terima berhasil diimpor!`);
-        } else if (type === "stock") {
-          if (typeof parsedData !== "object" || Array.isArray(parsedData)) {
-            alert(
-              "Data Stock harus dalam format objek { 'ITEM_ID': Qty, ... }."
-            );
-            return;
-          }
-          setStockData((prev) => ({ ...prev, ...parsedData }));
-          alert(
-            `Data Stock berhasil diimpor! ${
-              Object.keys(parsedData).length
-            } item diperbarui.`
-          );
-        }
-        event.target.value = ""; // Reset input file setelah sukses
-      } catch (error) {
-        console.error("Error parsing file:", error);
-        alert("Gagal memproses file. Pastikan format JSON Anda benar.");
+        const parsed = JSON.parse(e.target.result);
+        setStockData(parsed);
+        alert("Stok berhasil diimpor");
+        event.target.value = "";
+      } catch {
+        alert("Gagal impor stok");
         event.target.value = "";
       }
     };
     reader.readAsText(file);
   };
-  // =======================================================
 
-  const handleViewChange = (view) => {
-    setSelectedView(view);
-    setSelectedDetailId(null);
-    setDeliveryForm(null);
-  };
-
-  const handleShowDetail = (id) => {
-    setSelectedDetailId(id);
-    setSelectedView("detail");
-    setDeliveryForm(null);
+  const handlePrintLaporan = () => {
+    window.print();
   };
 
   const handleAddRequests = (newRequestsArray) => {
-    setRequests((prevRequests) => [...prevRequests, ...newRequestsArray]);
-    setSelectedView("dashboard");
+    setRequests((prev) => [...prev, ...newRequestsArray]);
+    setSelectedView("status");
   };
-
-  const handleUpdateRequests = (updater) => setRequests(updater);
 
   const handleOpenDeliverForm = (requestId) => {
     const req = requests.find((r) => r.idPermintaan === requestId);
     if (!req) return;
-
     const qtySisa = req.qtyDiminta - (req.qtyDeliveredTotal || 0);
-
-    // ✅ GUNAKAN stockData STATE
     const currentStock = stockData[req.nomorItem] || 0;
-
     const maxQtyToDeliver = Math.min(qtySisa, currentStock);
-
     if (maxQtyToDeliver <= 0) {
-      alert(
-        `Stok Item ${req.nomorItem} saat ini kosong (${currentStock} ${req.unitSatuan}). Tidak bisa dikirim.`
-      );
+      alert("Stok kosong");
       return;
     }
-
     setDeliveryForm({
       idPermintaan: requestId,
       nomorItem: req.nomorItem,
+      jenisBarang: req.jenisBarang,
       unitSatuan: req.unitSatuan,
-      qtySisa: qtySisa,
+      qtySisa,
       maxQty: maxQtyToDeliver,
       qtyToDeliver: maxQtyToDeliver,
+      tglRequest: req.tglRequest,
+      departemen: req.departemen,
+      pengirim: "Gudang",
+      tglKedatangan: new Date().toISOString().slice(0, 10),
+      tglExpired: "2099-12-31",
+      noLabel: "LBL-" + Date.now().toString().slice(-4),
     });
   };
 
   const handleProcessDelivery = (e) => {
     e.preventDefault();
-    const { idPermintaan, qtyToDeliver } = deliveryForm;
+    const {
+      idPermintaan,
+      qtyToDeliver,
+      nomorItem,
+      jenisBarang,
+      unitSatuan,
+      tglRequest,
+      departemen,
+      pengirim,
+      tglKedatangan,
+      tglExpired,
+      noLabel,
+    } = deliveryForm;
     const qty = parseInt(qtyToDeliver, 10);
-
-    if (qty <= 0) {
-      alert("Kuantitas pengiriman harus lebih dari 0.");
+    if (qty <= 0 || qty > deliveryForm.maxQty) {
+      alert("Qty tidak valid");
       return;
     }
-    if (qty > deliveryForm.maxQty) {
-      alert(`Kuantitas melebihi stok yang tersedia (${deliveryForm.maxQty}).`);
-      return;
-    }
-
     const deliveredRequest = requests.find(
-      (req) => req.idPermintaan === idPermintaan
+      (r) => r.idPermintaan === idPermintaan
     );
-
-    if (deliveredRequest) {
-      const qtyDeliveredNewTotal =
-        (deliveredRequest.qtyDeliveredTotal || 0) + qty;
-      const qtyDiminta = deliveredRequest.qtyDiminta;
-
-      let newStatus = deliveredRequest.status;
-      if (qtyDeliveredNewTotal >= qtyDiminta) {
-        newStatus = "DELIVERED";
-      } else {
-        newStatus = "PARTIAL_DELIVERED";
-      }
-
-      const isAdditive = deliveredRequest.type === "ADDITIVE";
-
-      // ✅ UPDATE STATE DELIVERIES
-      setDeliveries((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          idPermintaan: deliveredRequest.idPermintaan,
-          status: newStatus,
-          nomorItem: deliveredRequest.nomorItem,
-          jenisBarang: deliveredRequest.jenisBarang,
-          qtyShip1: !isAdditive ? qty : undefined,
-          qty: isAdditive ? qty : undefined,
-          sat: deliveredRequest.unitSatuan,
-          sisa: qtyDiminta - qtyDeliveredNewTotal,
-          lot: "LOT-AUTO-" + Date.now().toString().slice(-4),
-          expired: "2099-12-31",
-          telFIFO: new Date().toISOString().slice(0, 10),
-          departemen: deliveredRequest.departemen,
-          diserahkan: "SYSTEM",
-          diterima: deliveredRequest.departemen,
-          type: deliveredRequest.type,
-        },
-      ]);
-
-      // ✅ UPDATE STATE REQUESTS
-      handleUpdateRequests((prev) =>
-        prev.map((req) =>
-          req.idPermintaan === idPermintaan
-            ? {
-                ...req,
-                status: newStatus,
-                qtyDeliveredTotal: qtyDeliveredNewTotal,
-              }
-            : req
-        )
-      );
-
-      // ✅ UPDATE STATE STOCKDATA
-      setStockData((prevStock) => ({
-        ...prevStock,
-        [deliveredRequest.nomorItem]:
-          (prevStock[deliveredRequest.nomorItem] || 0) - qty,
-      }));
-
-      alert(
-        `Pengiriman ${qty} ${deliveredRequest.unitSatuan} untuk Permintaan ${idPermintaan} berhasil. Status baru: ${newStatus}.`
-      );
-      setDeliveryForm(null);
-    }
-  };
-
-  const handleResumeRequest = (requestId) => {
-    handleUpdateRequests((prev) =>
+    if (!deliveredRequest) return;
+    const qtyDeliveredNewTotal =
+      (deliveredRequest.qtyDeliveredTotal || 0) + qty;
+    let newStatus =
+      qtyDeliveredNewTotal >= deliveredRequest.qtyDiminta
+        ? "DELIVERED"
+        : "PARTIAL_DELIVERED";
+    setDeliveries((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        idPermintaan,
+        status: newStatus,
+        nomorItem,
+        jenisBarang,
+        qty,
+        sat: unitSatuan,
+        sisa: deliveredRequest.qtyDiminta - qtyDeliveredNewTotal,
+        lot: noLabel,
+        expired: tglExpired,
+        telFIFO: new Date().toISOString().slice(0, 10),
+        departemen,
+        diserahkan: pengirim,
+        diterima: departemen,
+        type: deliveredRequest.type,
+        tglRequest,
+        tglKedatangan,
+        noLabel,
+        qtyDiminta: deliveredRequest.qtyDiminta,
+        qtyDeliveredNewTotal,
+      },
+    ]);
+    setRequests((prev) =>
       prev.map((req) =>
-        req.idPermintaan === requestId ? { ...req, status: "REQUESTED" } : req
+        req.idPermintaan === idPermintaan
+          ? {
+              ...req,
+              status: newStatus,
+              qtyDeliveredTotal: qtyDeliveredNewTotal,
+            }
+          : req
       )
     );
-    alert(`Permintaan ${requestId} dilanjutkan kembali.`);
+    setStockData((prev) => ({
+      ...prev,
+      [nomorItem]: (prev[nomorItem] || 0) - qty,
+    }));
+    alert("Kirim berhasil");
+    setDeliveryForm(null);
   };
 
-  const handleCancelRequest = (requestId) => {
-    handleUpdateRequests((prev) =>
-      prev.map((req) =>
-        req.idPermintaan === requestId ? { ...req, status: "CANCELED" } : req
-      )
-    );
-    alert(`Permintaan ${requestId} dibatalkan permanen.`);
-  };
+  // 🔝 URUTAN: URGENT → BELUM DIKIRIM → SUDAH DIKIRIM (by timestamp)
+  const sortedRequests = useMemo(() => {
+    return [...requests].sort((a, b) => {
+      // 1. URGENT selalu di atas
+      if (a.isUrgent && !b.isUrgent) return -1;
+      if (!a.isUrgent && b.isUrgent) return 1;
 
-  const safeRequests = requests || [];
-  const safeDeliveries = deliveries || [];
+      // 2. BELUM DIKIRIM di atas SUDAH DIKIRIM
+      const aDelivered = a.status === "DELIVERED";
+      const bDelivered = b.status === "DELIVERED";
+      if (!aDelivered && bDelivered) return -1;
+      if (aDelivered && !bDelivered) return 1;
 
-  const dashboardData = safeRequests
-    .map((req) => {
-      const qtyDelivered = req.qtyDeliveredTotal || 0;
-
-      let currentStatus = req.status;
-      if (currentStatus !== "CANCELED" && currentStatus !== "DELIVERED") {
-        if (qtyDelivered > 0 && qtyDelivered < req.qtyDiminta) {
-          currentStatus = "PARTIAL_DELIVERED";
-        } else if (qtyDelivered === req.qtyDiminta) {
-          currentStatus = "DELIVERED";
-        } else if (
-          currentStatus === "REQUESTED" &&
-          (stockData[req.nomorItem] || 0) < req.qtyDiminta - qtyDelivered // ✅ GUNAKAN stockData
-        ) {
-          // Logika stok kurang: Jika stok kurang dan masih REQUESTED,
-          // statusnya akan tetap REQUESTED, tetapi admin akan melihat stok
-          // di modal. Dibiarkan sesuai struktur yang ada.
-          currentStatus = "REQUESTED";
-        }
+      // 3. DIKIRIM: urutkan dari lama ke baru (paling lama di bawah)
+      if (aDelivered && bDelivered) {
+        return new Date(a.tglRequest) - new Date(b.tglRequest);
       }
 
-      return {
-        id: req.idPermintaan,
-        jenis: req.jenisBarang,
-        departemen: req.departemen,
-        tgl: req.tglRequest,
-        status: currentStatus,
-        qty: req.qtyDiminta,
-        qtyDelivered: qtyDelivered,
-        qtySisa: req.qtyDiminta - qtyDelivered,
-        type: req.type,
-        isUrgent: req.isUrgent || false,
-        unitSatuan: req.unitSatuan,
-        nomorItem: req.nomorItem,
-      };
-    })
-    .filter((item) => {
-      const matchesDate = !filterTgl || item.tgl.includes(filterTgl);
+      // 4. BELUM DIKIRIM: urutkan dari baru ke lama (paling baru di atas)
+      return new Date(b.tglRequest) - new Date(a.tglRequest);
+    });
+  }, [requests]);
+
+  const filteredRequests = useMemo(() => {
+    return sortedRequests.filter((req) => {
+      const matchesDate = !filterTgl || req.tglRequest.includes(filterTgl);
       const matchesJenis =
         !filterJenis ||
-        item.jenis.toLowerCase().includes(filterJenis.toLowerCase()) ||
-        item.id.toLowerCase().includes(filterJenis.toLowerCase()) ||
-        item.nomorItem.toLowerCase().includes(filterJenis.toLowerCase());
+        req.jenisBarang.toLowerCase().includes(filterJenis.toLowerCase()) ||
+        req.nomorItem.toLowerCase().includes(filterJenis.toLowerCase());
       return matchesDate && matchesJenis;
     });
+  }, [sortedRequests, filterTgl, filterJenis]);
 
-  const sortedDashboardData = dashboardData.sort((a, b) => {
-    const getRank = (item) => {
-      if (item.status === "REQUESTED" && item.isUrgent) return 1;
-      else if (item.status === "PARTIAL_DELIVERED" && item.isUrgent) return 2;
-      else if (item.status === "REQUESTED") return 3;
-      else if (item.status === "PARTIAL_DELIVERED") return 4;
-      else if (item.status === "ON_HOLD") return 5;
-      else return 6;
-    };
-    const rankA = getRank(a);
-    const rankB = getRank(b);
-    if (rankA !== rankB) return rankA - rankB;
-    return a.id.localeCompare(b.id);
-  });
+  const filteredStock = useMemo(() => {
+    return Object.entries(stockData).filter(([code, qty]) => {
+      const lower = stockFilter.toLowerCase();
+      const matchCode = code.toLowerCase().includes(lower);
+      const matchName = code.toLowerCase().includes(lower);
+      const matchFIFO = "2025-10-24".includes(lower);
+      const matchExp = "2099-12-31".includes(lower);
+      return matchCode || matchName || matchFIFO || matchExp;
+    });
+  }, [stockData, stockFilter]);
 
-  const deliveriesBarang = safeDeliveries.filter(
-    (del) => del.status !== "CANCELED" && del.type === "BARANG"
-  );
-  const deliveriesAdditive = safeDeliveries.filter(
-    (del) => del.status !== "CANCELED" && del.type === "ADDITIVE"
-  );
-
-  const DashboardPermintaan = ({
-    data,
-    handleDeliverOpen,
-    handleResume,
-    handleCancel,
-    handleShowDetail,
-  }) => {
-    return (
-      <div>
-        <h2>
-          Dashboard Permintaan (
-          {
-            data.filter(
-              (item) =>
-                item.status !== "DELIVERED" && item.status !== "CANCELED"
-            ).length
-          }{" "}
-          Active)
-        </h2>
-        <div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID Permintaan</th>
-                <th>Tgl Request</th>
-                <th>Jenis Barang</th>
-                <th>Dept Peminta</th>
-                <th>Sisa / Diminta</th>
-                <th>Qty Terkirim</th>
-                <th>Status Order</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((item) => {
-                const idParts = item.id.split("-");
-                let displayedId = item.id;
-                if (idParts.length >= 4) {
-                  const date = idParts[1];
-                  const dept = idParts[2];
-                  const lastPart = idParts.slice(-1)[0];
-                  displayedId = `${date.slice(4)}/${dept}-${lastPart}`;
-                }
-
-                let actionButton = <span>Closed</span>;
-
-                if (
-                  item.status === "REQUESTED" ||
-                  item.status === "PARTIAL_DELIVERED"
-                ) {
-                  actionButton = (
-                    <div>
-                      <button
-                        onClick={() => handleDeliverOpen(item.id)}
-                        title={`Kirim sejumlah ${item.qtySisa} atau sebagian`}
-                      >
-                        Kirim ({item.qtySisa})
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleUpdateRequests((prev) =>
-                            prev.map((req) =>
-                              req.idPermintaan === item.id
-                                ? { ...req, status: "ON_HOLD" }
-                                : req
-                            )
-                          )
-                        }
-                        title="Tahan proses pengiriman ini"
-                      >
-                        Tahan
-                      </button>
-                    </div>
-                  );
-                } else if (item.status === "ON_HOLD") {
-                  actionButton = (
-                    <div>
-                      <button
-                        onClick={() => handleResume(item.id)}
-                        title="Lanjutkan proses pengiriman"
-                      >
-                        Lanjutkan
-                      </button>
-                      <button
-                        onClick={() => handleCancel(item.id)}
-                        title="Batalkan permintaan ini selamanya"
-                      >
-                        Batal
-                      </button>
-                    </div>
-                  );
-                }
-
-                return (
-                  <tr key={item.id}>
-                    <td>
-                      <span
-                        title={`ID Lengkap: ${item.id}`}
-                        onClick={() => handleShowDetail(item.id)}
-                      >
-                        {displayedId}
-                      </span>
-                    </td>
-                    <td>{item.tgl}</td>
-                    <td>{item.jenis}</td>
-                    <td>{item.departemen}</td>
-                    <td>
-                      {item.qtySisa} / {item.qty} {item.unitSatuan || "Unit"}
-                    </td>
-                    <td>
-                      {item.qtyDelivered} {item.unitSatuan || "Unit"}
-                    </td>
-                    <td>
-                      <span>{item.status}</span>
-                      {item.isUrgent &&
-                        item.status !== "DELIVERED" &&
-                        item.status !== "CANCELED" && <span>🚨 URGENT</span>}
-                    </td>
-                    <td>{actionButton}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const DeliveryFormModal = ({ form, setForm, handleProcess }) => {
-    if (!form) return null;
-
-    // ✅ GUNAKAN stockData
-    const currentStock = stockData[form.nomorItem] || 0;
-
-    return (
-      <div>
-        <h3>Formulir Pengiriman Bertahap</h3>
-        <p>
-          ID Permintaan: <strong>{form.idPermintaan}</strong>
-        </p>
-        <p>
-          Item: <strong>{form.nomorItem}</strong>
-        </p>
-        <p>
-          Sisa Diminta: {form.qtySisa} {form.unitSatuan} | Stok Tersedia:
-          {currentStock} {form.unitSatuan}
-        </p>
-
-        <form onSubmit={handleProcess}>
-          <label>
-            Qty Kirim:
-            <input
-              type="number"
-              value={form.qtyToDeliver}
-              onChange={(e) =>
-                setForm({ ...form, qtyToDeliver: e.target.value })
-              }
-              min="1"
-              max={form.maxQty}
-              required
-            />
-          </label>
-          <button type="submit">Proses Kirim</button>
-          <button type="button" onClick={() => setForm(null)}>
-            Batal
-          </button>
-        </form>
-      </div>
-    );
-  };
-
-  const HistoriSerahTerimaTable = ({ data, type }) => {
-    const isBarang = type === "BARANG";
-    const title = isBarang
-      ? "Serah Terima Kemasan/Barang"
-      : "Serah Terima Additive";
-
-    return (
-      <div>
-        <h2>
-          {title} ({data.length} Entri)
-        </h2>
-        {data.length === 0 ? (
-          <p>Tidak ada data histori serah terima untuk jenis ini.</p>
-        ) : (
-          <div>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID Transaksi</th>
-                  <th>ID Permintaan</th>
-                  {isBarang ? (
-                    <>
-                      <th>Nomor/Jenis Item</th>
-                      <th>Qty Kirim</th>
-                      <th>Sisa Diminta</th>
-                    </>
-                  ) : (
-                    <>
-                      <th>Kode Additive</th>
-                      <th>LOT & Exp. Date</th>
-                      <th>Qty Kirim</th>
-                    </>
+  const StatusPermintaanTable = () => (
+    <div>
+      <h3>Status Permintaan</h3>
+      <table>
+        <thead>
+          <tr>
+            <th4>Tgl</th4>
+            <th4>Barang</th4>
+            <th4>Diminta</th4>
+            <th4>DiKirim</th4>
+            <th4>Status</th4>
+            <th4>Aksi</th4>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredRequests.map((req) => {
+            const sisa = req.qtyDiminta - (req.qtyDeliveredTotal || 0);
+            return (
+              <tr key={req.idPermintaan}>
+                <td>{req.tglRequest}</td>
+                <td>
+                  {req.jenisBarang} ({req.nomorItem})
+                </td>
+                <td>
+                  {sisa} {req.unitSatuan}
+                </td>
+                <td>
+                  {req.qtyDeliveredTotal || 0} {req.unitSatuan}
+                </td>
+                <td>
+                  {req.status}
+                  {req.isUrgent && " 🚨URGENT"}
+                </td>
+                <td>
+                  {req.status !== "DELIVERED" && req.status !== "CANCELED" && (
+                    <button
+                      onClick={() => handleOpenDeliverForm(req.idPermintaan)}
+                    >
+                      Kirim ({sisa})
+                    </button>
                   )}
-                  <th>Tgl Serah</th>
-                  <th>Diserahkan Oleh</th>
-                  <th>Diterima Oleh</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((item) => (
-                  <tr key={item.id}>
-                    <td>DLV-{item.id}</td>
-                    <td>{item.idPermintaan}</td>
-                    {isBarang ? (
-                      <>
-                        <td>
-                          {item.nomorItem} / {item.jenisBarang}
-                        </td>
-                        <td>{item.qtyShip1 || item.qty}</td>
-                        <td>{item.sisa}</td>
-                      </>
-                    ) : (
-                      <>
-                        <td>{item.typeCode}</td>
-                        <td>
-                          {item.lot} / {item.expired}
-                        </td>
-                        <td>
-                          {item.qty} {item.sat || "Unit"}
-                        </td>
-                      </>
-                    )}
-                    <td>{item.telFIFO}</td>
-                    <td>{item.diserahkan}</td>
-                    <td>{item.diterima}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    );
-  };
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 
-  const DetailLaporanInternal = ({ id, deliveries, requests }) => {
-    const requestData = (requests || []).find((req) => req.idPermintaan === id);
-    const relatedDeliveries = (deliveries || []).filter(
-      (del) => del.idPermintaan === id
-    );
-
-    if (!requestData) {
-      return (
-        <div>
-          <h2>Detail Tidak Ditemukan ⚠️</h2>
-          <p>
-            ID Permintaan **{id}** tidak ditemukan dalam data Permintaan
-            (Requests).
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <h2>Detail Transaksi Serah Terima (ID: {id})</h2>
-        <div>
-          <p>
-            <strong>Jenis Item:</strong> {requestData.jenisBarang} (
-            {requestData.nomorItem})
-          </p>
-          <p>
-            <strong>Dept. Peminta:</strong> {requestData.departemen}
-          </p>
-          <p>
-            <strong>Status Terakhir:</strong> <span>{requestData.status}</span>
-          </p>
-          <p>
-            <strong>Qty Diminta:</strong> {requestData.qtyDiminta}{" "}
-            {requestData.unitSatuan || "Unit"}
-          </p>
-          <p>
-            <strong>Qty Terkirim Total:</strong> {requestData.qtyDeliveredTotal}{" "}
-            {requestData.unitSatuan || "Unit"}
-          </p>
-          <p>
-            <strong>Urgent:</strong> {requestData.isUrgent ? "YA 🚨" : "TIDAK"}
-          </p>
-        </div>
-        <h3>Histori Pengiriman ({relatedDeliveries.length} Log)</h3>
-        {relatedDeliveries.length === 0 ? (
-          <p>Belum ada log pengiriman yang tercatat untuk ID Permintaan ini.</p>
-        ) : (
-          <div>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID Delivery</th>
-                  <th>Waktu Kirim</th>
-                  <th>Qty Kirim</th>
-                  <th>Sisa</th>
-                  <th>Diserahkan</th>
-                  <th>Diterima</th>
-                  {requestData.type === "ADDITIVE" && <th>LOT/Expired</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {relatedDeliveries.map((del) => (
-                  <tr key={del.id}>
-                    <td>DLV-{del.id}</td>
-                    <td>{del.telFIFO}</td>
-                    <td>
-                      {del.qtyShip1 || del.qty}{" "}
-                      {requestData.unitSatuan ||
-                        (requestData.type === "BARANG"
-                          ? "UNIT"
-                          : del.sat || "Unit")}
-                    </td>
-                    <td>{del.sisa}</td>
-                    <td>{del.diserahkan}</td>
-                    <td>{del.diterima}</td>
-                    {requestData.type === "ADDITIVE" && (
-                      <td>
-                        {del.lot} / {del.expired}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    );
-  };
+  const SerahTerimaTable = () => (
+    <div>
+      <h3> Formulir Serah Terima</h3>
+      <table>
+        <thead>
+          <tr>
+            <th4>Tgl Minta</th4>
+            <th4>Tgl Kirim</th4>
+            <th4>Kode</th4>
+            <th4>Nama</th4>
+            <th4>Minta</th4>
+            <th4>Kirim</th4>
+            <th4>Peminta</th4>
+            <th4>Pengirim</th4>
+            <th4>Fifo</th4>
+            <th4>Fefo</th4>
+            <th4>Label</th4>
+            <th4>Satuan</th4>
+            <th4>Dept</th4>
+          </tr>
+        </thead>
+        <tbody>
+          {(deliveries || []).map((d) => (
+            <tr key={d.id}>
+              <td>{d.tglRequest} 00:00</td>
+              <td>{d.telFIFO} 00:00</td>
+              <td>{d.nomorItem}</td>
+              <td>{d.jenisBarang}</td>
+              <td>
+                {d.qtyDiminta} {d.sat}
+              </td>
+              <td>
+                {d.qty} {d.sat}
+              </td>
+              <td>{d.diterima}</td>
+              <td>{d.diserahkan}</td>
+              <td>{d.tglKedatangan}</td>
+              <td>{d.expired}</td>
+              <td>{d.noLabel}</td>
+              <td>
+                {d.qty} {d.sat}
+              </td>
+              <td>{d.departemen}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
   const FormPermintaanMultiItem = ({ addRequests }) => {
     const [items, setItems] = useState([
-      { nomorItem: "", qtyDiminta: 0, isUrgent: false, unit: "pcs" },
+      {
+        nomorItem: "",
+        namaBarang: "",
+        qtyDiminta: 0,
+        isUrgent: false,
+        unit: "pcs",
+      },
     ]);
     const [departemenTujuan, setDepartemenTujuan] = useState("PACKING");
     const [tanggalPermintaan, setTanggalPermintaan] = useState(
@@ -884,22 +480,30 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
     const addItem = () =>
       setItems([
         ...items,
-        { nomorItem: "", qtyDiminta: 0, isUrgent: false, unit: "pcs" },
+        {
+          nomorItem: "",
+          namaBarang: "",
+          qtyDiminta: 0,
+          isUrgent: false,
+          unit: "pcs",
+        },
       ]);
-    const removeItem = (index) => items.filter((_, i) => i !== index);
+
+    const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
 
     const handleSubmit = (e) => {
       e.preventDefault();
-
       if (
         items.some(
-          (item) => !item.nomorItem || parseInt(item.qtyDiminta, 10) <= 0
+          (item) =>
+            !item.nomorItem ||
+            !item.namaBarang ||
+            parseInt(item.qtyDiminta, 10) <= 0
         )
       ) {
-        alert("Harap isi semua Item Code dan Qty > 0.");
+        alert("Isi semua kolom (kode, nama, qty > 0)");
         return;
       }
-
       const newRequests = items.map((item, index) => ({
         idPermintaan: `REQ-${tanggalPermintaan.replace(
           /-/g,
@@ -908,7 +512,7 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
           .slice(0, 3)
           .toUpperCase()}-${Date.now()}-${index}`,
         nomorItem: item.nomorItem,
-        jenisBarang: item.nomorItem,
+        jenisBarang: item.namaBarang,
         qtyDiminta: parseInt(item.qtyDiminta, 10),
         qtyDeliveredTotal: 0,
         isUrgent: item.isUrgent,
@@ -923,12 +527,14 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
             : "BARANG",
       }));
       addRequests(newRequests);
-      alert(
-        `Berhasil menambahkan ${newRequests.length} permintaan baru! Lihat di Dashboard.`
-      );
-
       setItems([
-        { nomorItem: "", qtyDiminta: 0, isUrgent: false, unit: "pcs" },
+        {
+          nomorItem: "",
+          namaBarang: "",
+          qtyDiminta: 0,
+          isUrgent: false,
+          unit: "pcs",
+        },
       ]);
     };
 
@@ -937,43 +543,38 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
         <h3>Formulir Permintaan</h3>
         <form onSubmit={handleSubmit}>
           <div>
-            <div>
-              <label>Departemen:</label>
-              <input
-                type="text"
-                value={departemenTujuan}
-                onChange={(e) => setDepartemenTujuan(e.target.value)}
-                placeholder="Contoh: PACKING 1kg"
-              />
-            </div>
-            <div>
-              <label>Tanggal Permintaan:</label>
-              <input
-                type="date"
-                value={tanggalPermintaan}
-                onChange={(e) => setTanggalPermintaan(e.target.value)}
-              />
-            </div>
+            <label>Departemen:</label>
+            <input
+              value={departemenTujuan}
+              onChange={(e) => setDepartemenTujuan(e.target.value)}
+            />
+            <label>Tanggal:</label>
+            <input
+              type="date"
+              value={tanggalPermintaan}
+              onChange={(e) => setTanggalPermintaan(e.target.value)}
+            />
           </div>
 
           <div>
-            <div>
-              <span>#</span>
-              <span>Item Code</span>
-              <span>Qty</span>
-              <span>Unit</span>
-              <span>Urgent</span>
-              <span>Aksi</span>
-            </div>
-            {items.map((item, index) => (
-              <div key={index}>
-                <span>{index + 1}.</span>
+            {items.map((item, i) => (
+              <div key={i}>
+                <span>{i + 1}. </span>
                 <input
                   placeholder="Item Code"
                   value={item.nomorItem}
                   onChange={(e) => {
                     const newItems = [...items];
-                    newItems[index].nomorItem = e.target.value;
+                    newItems[i].nomorItem = e.target.value;
+                    setItems(newItems);
+                  }}
+                />
+                <input
+                  placeholder="Nama Item"
+                  value={item.namaBarang}
+                  onChange={(e) => {
+                    const newItems = [...items];
+                    newItems[i].namaBarang = e.target.value;
                     setItems(newItems);
                   }}
                 />
@@ -983,7 +584,7 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
                   value={item.qtyDiminta}
                   onChange={(e) => {
                     const newItems = [...items];
-                    newItems[index].qtyDiminta = e.target.value;
+                    newItems[i].qtyDiminta = e.target.value;
                     setItems(newItems);
                   }}
                 />
@@ -991,7 +592,7 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
                   value={item.unit}
                   onChange={(e) => {
                     const newItems = [...items];
-                    newItems[index].unit = e.target.value;
+                    newItems[i].unit = e.target.value;
                     setItems(newItems);
                   }}
                 >
@@ -1007,19 +608,17 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
                     checked={item.isUrgent}
                     onChange={(e) => {
                       const newItems = [...items];
-                      newItems[index].isUrgent = e.target.checked;
+                      newItems[i].isUrgent = e.target.checked;
                       setItems(newItems);
                     }}
                   />
-                  Ya
+                  urgent
                 </label>
-                <div>
-                  {items.length > 1 && (
-                    <button type="button" onClick={() => removeItem(index)}>
-                      Hapus
-                    </button>
-                  )}
-                </div>
+                {items.length > 1 && (
+                  <button type="button" onClick={() => removeItem(i)}>
+                    Hapus
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -1028,177 +627,196 @@ function LaporanProduksiPageForPage3({ pageName, isSpecialAdmin }) {
             <button type="button" onClick={addItem}>
               + Tambah Item
             </button>
-            <button type="submit">minta sekarang</button>
+            <button type="submit">Minta Sekarang</button>
           </div>
         </form>
       </div>
     );
   };
 
+  const StockTable = () => (
+    <div>
+      <h2>All Stok</h2>
+      <label>
+        Cari (Kode / Nama / FIFO / Exp):
+        <input
+          type="text"
+          placeholder="Contoh: PK001 atau 2025-12"
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value)}
+        />
+      </label>
+      <table>
+        <thead>
+          <tr>
+            <th>Kode Item</th>
+            <th>Nama Item</th>
+            <th>Stok Tersedia</th>
+            <th>FIFO Kedatangan</th>
+            <th>Expired</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredStock.map(([code, qty]) => (
+            <tr key={code}>
+              <td>{code}</td>
+              <td>{code}</td>
+              <td>{qty} unit</td>
+              <td>2025-10-24</td>
+              <td>2099-12-31</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <div>
+      <h1>{pageName} server</h1>
+      <p>Semua fitur manajemen sistem berada di sini.</p>
+
+      {/* DELIVERY FORM MODAL */}
+      {deliveryForm && (
+        <div>
+          <h3>Form Kirim</h3>
+          <p>ID: {deliveryForm.idPermintaan}</p>
+          <p>Item: {deliveryForm.nomorItem}</p>
+          <p>
+            Sisa: {deliveryForm.qtySisa} {deliveryForm.unitSatuan} | Stok:{" "}
+            {stockData[deliveryForm.nomorItem] || 0}
+          </p>
+          <form onSubmit={handleProcessDelivery}>
+            <label>
+              Qty Kirim:{" "}
+              <input
+                type="number"
+                value={deliveryForm.qtyToDeliver}
+                onChange={(e) =>
+                  setDeliveryForm({
+                    ...deliveryForm,
+                    qtyToDeliver: e.target.value,
+                  })
+                }
+                min="1"
+                max={deliveryForm.maxQty}
+                required
+              />
+            </label>
+            <button type="submit">Kirim</button>
+            <button type="button" onClick={() => setDeliveryForm(null)}>
+              Batal
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* NAVIGASI - MODUL DATA STOK JADI TOMBOL BARU */}
       <div>
-        <h1>Dashbord permintaan ({pageName})</h1>
+        <button onClick={() => setSelectedView("permintaan")}>
+          Permintaan
+        </button>
+        <button onClick={() => setSelectedView("status")}>
+          Status Permintaan
+        </button>
+        <button onClick={() => setSelectedView("serah")}>Serah Terima</button>
+        <button onClick={handlePrintLaporan}>Cetak</button>
+        <button onClick={() => setSelectedView("stock")}> Stok</button>
+        <button onClick={() => setSelectedView("modul")}>Modul</button>
       </div>
 
-      {/* ======================================================= */}
-      {/* START: MODUL PENGELOLAAN DATA BARU (IMPOR, UNDUH, RESET) */}
-      {/* ======================================================= */}
-      <div
-        style={{ padding: "10px", border: "1px solid black", margin: "15px 0" }}
-      >
-        <h3>MODUL DATA (Impor, Unduh, Reset)</h3>
-        <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-          {/* Permintaan */}
-          <div>
-            <h4>Permintaan ({requests.length} entri)</h4>
-            <div style={{ display: "flex", gap: "5px" }}>
-              <button
-                onClick={() => downloadJson(requests, "requests_data.json")}
-              >
-                Download
-              </button>
-              <button onClick={() => handleResetData("requests")}>Reset</button>
-              <label style={{ border: "1px solid #ccc", padding: "5px" }}>
-                Impor JSON
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={(e) => handleFileUpload(e, "requests")}
-                  style={{ display: "none" }}
-                />
-              </label>
-            </div>
-          </div>
+      {/* FILTER UNTUK STATUS & SERAH */}
+      {(selectedView === "status" || selectedView === "serah") && (
+        <div>
+          <label>
+            Filter Tgl:{" "}
+            <input
+              type="date"
+              value={filterTgl}
+              onChange={(e) => setFilterTgl(e.target.value)}
+            />
+          </label>
+          <label>
+            Cari:{" "}
+            <input
+              placeholder="Kode/Nama Barang"
+              value={filterJenis}
+              onChange={(e) => setFilterJenis(e.target.value)}
+            />
+          </label>
+        </div>
+      )}
 
-          {/* Serah Terima */}
-          <div>
-            <h4>Serah Terima ({deliveries.length} entri)</h4>
-            <div style={{ display: "flex", gap: "5px" }}>
-              <button
-                onClick={() => downloadJson(deliveries, "deliveries_data.json")}
-              >
-                Download
-              </button>
-              <button onClick={() => handleResetData("deliveries")}>
-                Reset
-              </button>
-              <label style={{ border: "1px solid #ccc", padding: "5px" }}>
-                Impor JSON
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={(e) => handleFileUpload(e, "deliveries")}
-                  style={{ display: "none" }}
-                />
-              </label>
-            </div>
-          </div>
+      {/* KONTEN */}
+      {selectedView === "permintaan" && (
+        <FormPermintaanMultiItem addRequests={handleAddRequests} />
+      )}
+      {selectedView === "status" && <StatusPermintaanTable />}
+      {selectedView === "serah" && <SerahTerimaTable />}
+      {selectedView === "stock" && (
+        <>
+          <label>
+            Cari (Kode / Nama / FIFO / Exp):{" "}
+            <input
+              type="text"
+              placeholder="Contoh: PK001 atau 2025-12"
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+            />
+          </label>
+          <table>
+            <thead>
+              <tr>
+                <th>Kode Item</th>
+                <th>Nama Item</th>
+                <th>Stok Tersedia</th>
+                <th>FIFO Kedatangan</th>
+                <th>Expired</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStock.map(([code, qty]) => (
+                <tr key={code}>
+                  <td>{code}</td>
+                  <td>{code}</td>
+                  <td>{qty} unit</td>
+                  <td>2025-10-24</td>
+                  <td>2099-12-31</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
-          {/* Stok Gudang */}
-          <div>
-            <h4>Stok ({Object.keys(stockData).length} item)</h4>
-            <div style={{ display: "flex", gap: "5px" }}>
-              <button
-                onClick={() => downloadJson(stockData, "stock_data.json")}
-              >
-                Download
-              </button>
-              <button onClick={() => handleResetData("stock")}>Reset</button>
-              <label style={{ border: "1px solid #ccc", padding: "5px" }}>
-                Impor JSON
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={(e) => handleFileUpload(e, "stock")}
-                  style={{ display: "none" }}
-                />
-              </label>
-            </div>
+      {/* MODUL DATA - STOK: MUNCUL HANYA SAAT KLIK "Modul Data - Stok" */}
+      {selectedView === "modul" && (
+        <div
+          style={{
+            marginTop: "15px",
+            border: "1px solid black",
+            padding: "10px",
+            width: "fit-content",
+          }}
+        >
+          <h3>Modul Data - Stok</h3>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => downloadJson(stockData, "stock.json")}>
+              Download JSON
+            </button>
+            <button onClick={handleResetData}>Reset Data</button>
+            <label style={{ border: "1px solid #ccc", padding: "5px" }}>
+              Upload JSON
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+              />
+            </label>
           </div>
         </div>
-      </div>
-      {/* END: MODUL PENGELOLAAN DATA */}
-
-      <DeliveryFormModal
-        form={deliveryForm}
-        setForm={setDeliveryForm}
-        handleProcess={handleProcessDelivery}
-      />
-
-      <div>
-        <button onClick={() => handleViewChange("dashboard")}>
-          Dashboard Permintaan
-        </button>
-        {selectedDetailId && selectedView === "detail" && (
-          <button onClick={() => handleViewChange("dashboard")}>
-            ← Kembali ke Dashboard
-          </button>
-        )}
-        <button onClick={() => handleViewChange("serah_barang")}>
-          Serah Terima Kemasan
-        </button>
-        <button onClick={() => handleViewChange("serah_additive")}>
-          Serah Terima Additive
-        </button>
-        <button onClick={() => handleViewChange("permintaan")}>
-          Buat Permintaan Baru
-        </button>
-        {/* ✅ TOMBOL CETAK */}
-        <button onClick={handlePrintLaporan}>Cetak Laporan 🖨️</button>
-      </div>
-
-      <div>
-        {selectedView === "dashboard" ||
-        selectedView === "serah_barang" ||
-        selectedView === "serah_additive" ? (
-          <div>
-            <label>
-              Filter Tgl:
-              <input
-                type="date"
-                value={filterTgl}
-                onChange={(e) => setFilterTgl(e.target.value)}
-              />
-            </label>
-            <label>
-              Cari Item:
-              <input
-                type="text"
-                placeholder="Cari Kode atau Jenis Barang..."
-                value={filterJenis}
-                onChange={(e) => setFilterJenis(e.target.value)}
-              />
-            </label>
-          </div>
-        ) : null}
-
-        {selectedView === "detail" && selectedDetailId && (
-          <DetailLaporanInternal
-            id={selectedDetailId}
-            deliveries={safeDeliveries}
-            requests={safeRequests}
-          />
-        )}
-        {selectedView === "dashboard" && (
-          <DashboardPermintaan
-            data={sortedDashboardData}
-            handleDeliverOpen={handleOpenDeliverForm}
-            handleResume={handleResumeRequest}
-            handleCancel={handleCancelRequest}
-            handleShowDetail={handleShowDetail}
-          />
-        )}
-        {selectedView === "serah_barang" && (
-          <HistoriSerahTerimaTable data={deliveriesBarang} type="BARANG" />
-        )}
-        {selectedView === "serah_additive" && (
-          <HistoriSerahTerimaTable data={deliveriesAdditive} type="ADDITIVE" />
-        )}
-        {selectedView === "permintaan" && (
-          <FormPermintaanMultiItem addRequests={handleAddRequests} />
-        )}
-      </div>
+      )}
     </div>
   );
 }
